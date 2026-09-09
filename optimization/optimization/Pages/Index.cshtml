@@ -1,0 +1,70 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Оптимизация методом золотого сечения";
+}
+
+<link href="~/css/GoldenSection.css" rel="stylesheet" />
+
+<div class="container-fluid px-4">
+    <h1 class="my-4">Метод золотого сечения</h1>
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <form method="post">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="Func" class="form-label">Функция</label>
+                        <input asp-for="Func" type="text" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Left" class="form-label">Левая граница (a)</label>
+                        <input asp-for="Left" type="number" step="any" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Right" class="form-label">Правая граница (b)</label>
+                        <input asp-for="Right" type="number" step="any" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Epsilon" class="form-label">Точность (ε)</label>
+                        <input asp-for="Epsilon" type="number" step="any" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="MaxIterations" class="form-label">Максимум итераций</label>
+                        <input asp-for="MaxIterations" type="number" step="1" class="form-control" />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Mode" class="form-label">Цель оптимизации</label>
+                        <select asp-for="Mode" class="form-select">
+                            <option value="Min">Поиск минимума</option>
+                            <option value="Max">Поиск максимума</option>
+                        </select>
+                    </div>
+                    <div class="col-12 d-flex gap-2">
+                        <button type="submit" name="action" asp-page-handler="Calculate" class="btn btn-primary">
+                            Выполнить оптимизацию
+                        </button>
+                        <button type="submit" name="action" value="Reset" class="btn btn-outline-secondary">
+                            Сбросить
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="border rounded p-3 h-100">
+                @if (Model.ResultX.HasValue)
+                {
+                    <div class="alert alert-success">
+                        @Model.ResultX;
+                    </div>
+                }
+                else
+                {
+                    <h3 class="text-muted text-center">TYT BUDET GRAFIK</h3>
+                }
+            </div>
+        </div>
+    </div>
+</div>
