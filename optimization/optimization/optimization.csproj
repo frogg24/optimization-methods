@@ -9,8 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MathParser.org-mXparser" Version="6.1.1" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
-    <PackageReference Include="MudBlazor" Version="9.9.0" />
+    <PackageReference Include="NCalc" Version="7.1.0" />
   </ItemGroup>
 
 </Project>

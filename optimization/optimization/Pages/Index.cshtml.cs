@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using optimization.Core;
 
 namespace optimization.Pages
 {
@@ -9,24 +10,21 @@ namespace optimization.Pages
         [BindProperty] public double Left { get; set; }
         [BindProperty] public double Right { get; set; }
         [BindProperty] public double Epsilon { get; set; } = 0.001;
-        [BindProperty] public int MaxIterations { get; set; } = 100;
         [BindProperty] public string Mode { get; set; } = "Min";
 
         public double? ResultX { get; set; }
         public double? ResultFx { get; set; }
-        public int IterationsDone { get; set; }
+        //public int IterationsDone { get; set; }
 
         public IActionResult OnPostCalculate()
         {
             if (!ModelState.IsValid)
                 return Page();
 
-            //bool minimize = Mode == "Min";
-            //double x = Optimize(Left, Right, Epsilon, MaxIterations, minimize, out double fx, out int iters);
-
-            ResultX = Right;
-            //ResultFx = fx;
-            //IterationsDone = iters;
+            Optumizer opt = new Optumizer();
+            (double, double) res = opt.CalcGoldenRatio(Func, Left, Right, Epsilon);
+            ResultX = res.Item2;
+            ResultFx = res.Item1;
 
             return Page();
         }
