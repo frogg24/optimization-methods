@@ -28,11 +28,14 @@ namespace optimization.Pages
             Optumizer opt = new Optumizer();
             try
             {
-                (double fMin, double xMin) = opt.CalcGoldenRatio(Func, Left, Right, Epsilon);
-                ResultX = xMin;
-                ResultFx = fMin;
+                string originalFunc = Func;
+                string funcForOpt = Mode == "Max" ? $"-({Func})" : Func;
 
-                PlotJson = BuildPlotJson(Func, Left, Right, xMin, fMin);
+                (double fOpt, double xOpt) = opt.CalcGoldenRatio(funcForOpt, Left, Right, Epsilon);
+                ResultX = xOpt;
+                ResultFx = Mode == "Max" ? -fOpt : fOpt;
+
+                PlotJson = BuildPlotJson(originalFunc, Left, Right, xOpt, ResultFx.Value);
                 Error = null;
             }
             catch (Exception ex)

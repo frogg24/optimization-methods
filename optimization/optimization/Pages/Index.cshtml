@@ -40,10 +40,17 @@
                         <button type="submit" name="action" asp-page-handler="Calculate" class="btn btn-primary">
                             Выполнить оптимизацию
                         </button>
-                        <button type="submit" name="action" value="Reset" class="btn btn-outline-secondary">
-                            Сбросить
-                        </button>
                     </div>
+
+                    @if (Model.ResultX.HasValue && Model.ResultFx.HasValue)
+                    {
+                        <div class="alert alert-success">
+                            точка @(Model.Mode == "Max" ? "максимума" : "минимума") функции: @Model.ResultX
+                        </div>
+                        <div class="alert alert-success">
+                            значение функции в точке @Model.ResultFx
+                        </div>
+                    }
                 </div>
             </form>
         </div>
@@ -56,17 +63,6 @@
                         <strong>Ошибка:</strong> @Model.Error
                     </div>
                 }
-
-                @if (Model.ResultX.HasValue && Model.ResultFx.HasValue)
-                {
-                    <div class="alert alert-success">
-                        точка минимума функции: @Model.ResultX
-                    </div>
-                    <div class="alert alert-success">
-                        значение функции в точке @Model.ResultFx
-                    </div>
-                }
-
                 @if (!string.IsNullOrEmpty(Model.PlotJson))
                 {
                     <div id="plot" style="width: 100%; height: 520px;"></div>
