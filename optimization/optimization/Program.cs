@@ -1,15 +1,35 @@
+using Microsoft.AspNetCore.Localization;
+using System.Globalization;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorPages();
+
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var supportedCultures = new[]
+    {
+        new CultureInfo("en-US"),
+        new CultureInfo("ru-RU")
+    };
+
+    options.DefaultRequestCulture = new RequestCulture("en-US", "ru-RU");
+    options.SupportedCultures = supportedCultures;
+    options.SupportedUICultures = supportedCultures;
+
+    // Принудительно устанавливаем en-US для чисел (точка как разделитель)
+    options.RequestCultureProviders.Insert(0,
+        new CustomRequestCultureProvider(async context =>
+        {
+            return new ProviderCultureResult("en-US", "ru-RU");
+        }));
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -17,6 +37,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseRequestLocalization();
 
 app.UseAuthorization();
 
