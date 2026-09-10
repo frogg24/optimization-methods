@@ -50,7 +50,14 @@
 
         <div class="col-lg-7">
             <div class="border rounded p-3 h-100">
-                @if (Model.ResultX.HasValue)
+                @if (!string.IsNullOrEmpty(Model.Error))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <strong>Ошибка:</strong> @Model.Error
+                    </div>
+                }
+
+                @if (Model.ResultX.HasValue && Model.ResultFx.HasValue)
                 {
                     <div class="alert alert-success">
                         точка минимума функции: @Model.ResultX
@@ -59,9 +66,51 @@
                         значение функции в точке @Model.ResultFx
                     </div>
                 }
-                else
+
+                @if (!string.IsNullOrEmpty(Model.PlotJson))
                 {
-                    <h3 class="text-muted text-center">TYT BUDET GRAFIK</h3>
+                    <div id="plot" style="width: 100%; height: 520px;"></div>
+
+                    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+                    <script>
+                        const data = @Html.Raw(Model.PlotJson);
+
+                        const curve = {
+                            x: data.xs,
+                            y: data.ys,
+                            mode: 'lines',
+                            name: 'f(x)',
+                            line: { color: '#1f77b4', width: 2 },
+                            connectgaps: false
+                        };
+
+                        const minPoint = {
+                            x: [data.xMin],
+                            y: [data.fMin],
+                            mode: 'markers',
+                            name: 'минимум',
+                            marker: { color: 'red', size: 12 }
+                        };
+
+                        const layout = {
+                            title: 'Метод золотого сечения',
+                            xaxis: { title: 'x' },
+                            yaxis: { title: 'f(x)' },
+                            hovermode: 'closest',
+                            shapes: [{
+                                type: 'line',
+                                xref: 'x', yref: 'paper',
+                                x0: data.xMin, x1: data.xMin,
+                                y0: 0, y1: 1,
+                                line: { color: 'green', width: 1.5, dash: 'dash' }
+                            }]
+                        };
+
+                        Plotly.newPlot('plot', [curve, minPoint], layout, {
+                            responsive: true,
+                            scrollZoom: true
+                        });
+                    </script>
                 }
             </div>
         </div>
