@@ -1,5 +1,7 @@
 ﻿
 using org.mariuszgromada.math.mxparser;
+using System.Drawing;
+using System.Runtime.InteropServices;
 
 namespace optimization.Core
 {
@@ -84,6 +86,108 @@ namespace optimization.Core
             double fMin = Calculate(xMin);
 
             return (fMin, xMin, iterations);
+        }
+
+        public (List<double> resX, double resFx) CalcHookeJeeves(string func, List<double> X0, double step, double stepRed, double eps)
+        {
+            var arguments = new List<Argument>();
+
+            for (int i = 0; i < X0.Count; i++)
+            {
+                arguments.Add(new Argument($"x{i + 1}", 0));
+            }
+            var exp = new Expression(func, arguments.ToArray());
+
+            double Calculate(List<double> point)
+            {
+                for (int i = 0; i < point.Count; i++)
+                {
+                    arguments[i].setArgumentValue(point[i]);
+                }
+
+                return exp.calculate();
+            }
+
+            var baseX = new List<double>(X0);
+            double baseValue = Calculate(baseX);
+            double curStep = step;
+
+            int iterations = 0;
+            const int maxIterations = 10000;
+
+            while (curStep > eps)
+            {
+                iterations++;
+
+                if (iterations > maxIterations)
+                {
+                    throw new InvalidOperationException("Превышено максимальное количество итераций. Возможно, функция не имеет экстремума.");
+                }
+
+                var (exploredX, exploredValue) = Explore(baseX, curStep, Calculate);
+                if (exploredValue >= baseValue)
+                {
+                    curStep *= stepRed;
+                    continue;
+                }
+
+                // Запоминаем старую базовую точку
+                var oldBaseX = new List<double>(baseX);
+
+                // Новая лучшая точка становится базовой
+                baseX = exploredX;
+                baseValue = exploredValue;
+
+                // Движение по образцу
+                var patternX = new List<double>();
+                for (int i = 0; i < baseX.Count; i++)
+                {
+                    patternX.Add(baseX[i] + (baseX[i] - oldBaseX[i]));
+                }
+                var (patternResultX, patternResultValue) = Explore(patternX, curStep, Calculate);
+
+                if (patternResultValue < baseValue)
+                {
+                    baseX = patternResultX;
+                    baseValue = patternResultValue;
+                }
+            }
+
+            return (baseX, baseValue);
+        }
+
+        private (List<double> point, double value) Explore( List<double> startPoint, double step, Func<List<double>, double> calculate)
+        {
+            var currentX = new List<double>(startPoint);
+            double bestValue = calculate(currentX);
+
+            for (int nArg = 0; nArg < currentX.Count; nArg++)
+            {
+                var plusPoint = new List<double>(currentX);
+                plusPoint[nArg] += step;
+
+                double value = calculate(plusPoint);
+
+                if (value < bestValue)
+                {
+                    currentX = plusPoint;
+                    bestValue = value;
+                    continue;
+                }
+
+                var minusPoint = new List<double>(currentX);
+                minusPoint[nArg] -= step;
+
+                value = calculate(minusPoint);
+
+                if (value < bestValue)
+                {
+                    currentX = minusPoint;
+                    bestValue = value;
+                }
+            }
+
+            return (currentX, bestValue);
         }
     }
 }

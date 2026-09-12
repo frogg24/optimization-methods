@@ -1,24 +1,27 @@
 ﻿@page
 @model Hooke_JeevesModel
+
 @{
     ViewData["Title"] = "Оптимизация методом Хука-Дживса";
 }
-
-<link href="~/css/GoldenSection.css" rel="stylesheet" />
 
 <div class="container-fluid px-4">
     <h1 class="my-4">Метод Хука-Дживса</h1>
 
     <div class="row g-4">
+
         <div class="col-lg-5">
             <form method="post">
+
                 <div asp-validation-summary="All" class="text-danger"></div>
 
                 <div class="row g-3">
+
                     <div class="col-12">
                         <label asp-for="Dimension" class="form-label">Количество переменных:</label>
                         <input asp-for="Dimension" type="number" min="1" class="form-control" />
                         <span asp-validation-for="Dimension" class="text-danger small"></span>
+
                         <button type="button" onclick="generateFields()" class="btn btn-secondary btn-sm mt-2">
                             Создать поля
                         </button>
@@ -32,17 +35,18 @@
 
                     <div class="col-12">
                         <label class="form-label">Начальная точка</label>
+
                         <div id="x0-container" class="border rounded p-2 mt-2 bg-light">
+
                             @if (Model.X0 != null && Model.X0.Count > 0)
                             {
-                                <!-- Сервер сам рендерит поля, если данные есть -->
                                 @for (int i = 0; i < Model.X0.Count; i++)
                                 {
                                     <div class="mb-2">
                                         <label class="form-label mb-1">
                                             x[@i]:
-                                            <input type="number" step="any" name="X0"
-                                                   value="@Model.X0[i]" class="form-control form-control-sm" />
+
+                                            <input type="number step="any" name="X0" value="@Model.X0[i]" class="form-control form-control-sm" />
                                         </label>
                                     </div>
                                 }
@@ -53,22 +57,23 @@
                                     Нажмите "Создать поля" для ввода начальных значений
                                 </p>
                             }
+
                         </div>
                     </div>
 
-                    <div class="col-12">
+                    <div class="col-4">
                         <label asp-for="Step" class="form-label">Начальный шаг</label>
                         <input asp-for="Step" type="number" step="any" class="form-control" />
                         <span asp-validation-for="Step" class="text-danger small"></span>
                     </div>
 
-                    <div class="col-12">
-                        <label asp-for="StepRed" class="form-label">Коэффициент уменьшения шага</label>
+                    <div class="col-4">
+                        <label asp-for="StepRed" class="form-label">Коэффициент шага</label>
                         <input asp-for="StepRed" type="number" step="any" class="form-control" />
                         <span asp-validation-for="StepRed" class="text-danger small"></span>
                     </div>
 
-                    <div class="col-12">
+                    <div class="col-4">
                         <label asp-for="Epsilon" class="form-label">Точность</label>
                         <input asp-for="Epsilon" type="number" step="any" class="form-control" />
                         <span asp-validation-for="Epsilon" class="text-danger small"></span>
@@ -76,55 +81,74 @@
 
                     <div class="col-12">
                         <label asp-for="Mode" class="form-label">Цель оптимизации</label>
+
                         <select asp-for="Mode" class="form-select">
                             <option value="Min">Поиск минимума</option>
                             <option value="Max">Поиск максимума</option>
                         </select>
                     </div>
 
-                    <div class="col-12 d-flex gap-2">
+                    <div class="col-12">
                         <button type="submit" asp-page-handler="CalculateHooke" class="btn btn-primary">
                             Выполнить оптимизацию
                         </button>
                     </div>
+
                 </div>
             </form>
         </div>
 
         <div class="col-lg-7">
+
             <div class="border rounded p-3 h-100">
+
                 @if (!string.IsNullOrEmpty(Model.Error))
                 {
-                    <div class="alert alert-danger" role="alert">
+                    <div class="alert alert-danger">
                         <strong>Ошибка:</strong> @Model.Error
                     </div>
                 }
+
                 @if (Model.ResultX != null && Model.ResultX.Count > 0)
                 {
                     <div class="alert alert-success">
+
                         <h5>Результат:</h5>
+
                         <p>
-                            <strong>Минимум в точке:</strong>
+                            <strong>
+                                @(Model.Mode == "Max" ? "Максимум" : "Минимум") в точке:
+                            </strong>
+
                             (@string.Join(", ", Model.ResultX.Select(v => v.ToString("F4"))))
                         </p>
-                        <p><strong>f(x) =</strong> @Model.ResultFx?.ToString("F6")</p>
+
+                        <p>
+                            <strong>f(x) =</strong>
+                            @Model.ResultFx?.ToString("F6")
+                        </p>
+
                     </div>
                 }
+
                 @if (!string.IsNullOrEmpty(Model.PlotJson))
                 {
-                    <div id="plot" style="width:100%;height:500px;"></div>
-                    <script>
-                        const plotData = @Html.Raw(Model.PlotJson);
-                        // отрисовка графика
-                    </script>
+                    <div id="plot" style="width:100%; height:550px;"></div>
                 }
+
             </div>
         </div>
+
     </div>
 </div>
 
+
 @section Scripts {
+
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
     <script>
+
         function generateFields() {
             const n = parseInt(document.getElementById('Dimension').value);
             const container = document.getElementById('x0-container');
@@ -139,13 +163,152 @@
             for (let i = 0; i < n; i++) {
                 const div = document.createElement('div');
                 div.className = 'mb-2';
+
                 div.innerHTML = `
-                    <label class="form-label mb-1">x[${i}]:
-                        <input type="number" step="any" name="X0" value="0" class="form-control form-control-sm" />
+                    <label class="form-label mb-1">
+                        x[${i}]:
+
+                        <input type="number"
+                               step="any"
+                               name="X0"
+                               value="0"
+                               class="form-control form-control-sm" />
                     </label>
                 `;
+
                 container.appendChild(div);
             }
         }
+
+
+        function getNearestY(data) {
+            let bestIndex = 0;
+            let bestDistance = Infinity;
+
+            for (let i = 0; i < data.xs.length; i++) {
+                const distance = Math.abs(data.xs[i] - data.startX);
+
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    bestIndex = i;
+                }
+            }
+
+            return data.ys[bestIndex];
+        }
+
+
+        function draw2DPlot(data) {
+            const curve = {
+                x: data.xs,
+                y: data.ys,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'f(x1)',
+                line: { width: 2 }
+            };
+
+            const startPoint = {
+                x: [data.startX],
+                y: [getNearestY(data)],
+                type: 'scatter',
+                mode: 'markers',
+                name: 'Начальная точка',
+                marker: {
+                    size: 10,
+                    color: 'green'
+                }
+            };
+
+            const optimum = {
+                x: [data.xOpt],
+                y: [data.fOpt],
+                type: 'scatter',
+                mode: 'markers',
+                name: data.optimumName,
+                marker: {
+                    size: 12,
+                    color: 'red'
+                }
+            };
+
+            const layout = {
+                title: 'Метод Хука-Дживса',
+                xaxis: { title: 'x1' },
+                yaxis: { title: 'f(x1)' },
+                hovermode: 'closest'
+            };
+
+            Plotly.newPlot('plot', [curve, startPoint, optimum], layout, {
+                responsive: true,
+                scrollZoom: true
+            });
+        }
+
+
+        function draw3DPlot(data) {
+            const surface = {
+                x: data.xs,
+                y: data.ys,
+                z: data.zs,
+                type: 'surface',
+                name: 'f(x1, x2)',
+                opacity: 0.85
+            };
+
+            const optimum = {
+                x: [data.xOpt],
+                y: [data.yOpt],
+                z: [data.fOpt],
+                type: 'scatter3d',
+                mode: 'markers',
+                name: data.optimumName,
+                marker: {
+                    size: 7,
+                    color: 'red'
+                }
+            };
+
+            const layout = {
+                title: 'Метод Хука-Дживса',
+
+                scene: {
+                    xaxis: { title: 'x1' },
+                    yaxis: { title: 'x2' },
+                    zaxis: { title: 'f(x1, x2)' }
+                },
+
+                margin: {
+                    l: 0,
+                    r: 0,
+                    b: 0,
+                    t: 50
+                }
+            };
+
+            Plotly.newPlot('plot', [surface, optimum], layout, {
+                responsive: true
+            });
+        }
+
     </script>
+
+
+    @if (!string.IsNullOrEmpty(Model.PlotJson))
+    {
+        <script>
+            const plotData = @Html.Raw(Model.PlotJson);
+
+            console.log("Данные графика:", plotData);
+
+            if (plotData.type === "2d") {
+                draw2DPlot(plotData);
+            } else if (plotData.type === "3d") {
+                draw3DPlot(plotData);
+            } else {
+                console.error("Неизвестный тип графика:", plotData.type);
+            }
+        </script>
+    }
+
 }
