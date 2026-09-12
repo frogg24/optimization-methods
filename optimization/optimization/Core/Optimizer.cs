@@ -3,16 +3,20 @@ using org.mariuszgromada.math.mxparser;
 
 namespace optimization.Core
 {
-    public class Optumizer
+    public class Optimizer
     {
         // возврат в формате (значение,точка)
-        public (double, double) CalcGoldenRatio(string func, double a, double b, double eps)
+        public (double, double, int) CalcGoldenRatio(string func, double a, double b, double eps)
         {
-            if (string.IsNullOrEmpty(func))
+            if (string.IsNullOrWhiteSpace(func))
             {
                 throw new ArgumentNullException("Функция не была введена");
             }
-            if(a >= b)
+            if (!double.IsFinite(a) || !double.IsFinite(b))
+            {
+                throw new ArgumentException("Границы интервала должны быть конечными числами");
+            }
+            if (a >= b)
             {
                 throw new ArgumentException("Интервал введен некорректно");
             }
@@ -22,6 +26,21 @@ namespace optimization.Core
             }
             var x = new Argument("x", a);
             var exp = new Expression(func, x);
+
+            double Calculate(double point)
+            {
+                x.setArgumentValue(point);
+
+                double value = exp.calculate();
+
+                if (!double.IsFinite(value))
+                {
+                    throw new ArgumentException($"Функция не определена в точке x = {point}");
+                }
+
+                return value;
+            }
+
             if (!exp.checkSyntax())
             {
                 throw new ArgumentException("Ошибка в формуле: " + exp.getErrorMessage());
@@ -32,12 +51,13 @@ namespace optimization.Core
             double x1 = a + (1-tau)*(b-a);
             double x2 = a + tau*(b-a);
 
-            x.setArgumentValue(x1);
-            double f1 = exp.calculate();
-            x.setArgumentValue(x2);
-            double f2 = exp.calculate();
+            double f1 = Calculate(x1);
+            double f2 = Calculate(x2);
+
+            int iterations = 0;
             while (b-a > eps)
             {
+                iterations++;
                 if(f1 < f2)
                 {
                     b = x2;
@@ -46,8 +66,7 @@ namespace optimization.Core
                     f2=f1;
 
                     x1 = a + (1-tau)*(b-a);
-                    x.setArgumentValue(x1);
-                    f1 = exp.calculate();
+                    f1 = Calculate(x1);
                 }
                 else
                 {
@@ -57,16 +76,14 @@ namespace optimization.Core
                     f1=f2;
 
                     x2 = a + tau*(b-a);
-                    x.setArgumentValue(x2);
-                    f2 = exp.calculate();
+                    f2 = Calculate(x2);
                 }
             }
 
             double xMin = (a + b) / 2.0;
-            x.setArgumentValue(xMin);
-            double fMin = exp.calculate();
+            double fMin = Calculate(xMin);
 
-            return (fMin, xMin);
+            return (fMin, xMin, iterations);
         }
     }
 }

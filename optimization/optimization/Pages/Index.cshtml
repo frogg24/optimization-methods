@@ -50,6 +50,9 @@
                         <div class="alert alert-success">
                             значение функции в точке @Model.ResultFx
                         </div>
+                        <div class="alert alert-success">
+                            экстремум найден за @Model.Iterations итераций 
+                        </div>
                     }
                 </div>
             </form>
@@ -84,7 +87,7 @@
                             x: [data.xMin],
                             y: [data.fMin],
                             mode: 'markers',
-                            name: 'минимум',
+                            name: data.optimumName,
                             marker: { color: 'red', size: 12 }
                         };
 

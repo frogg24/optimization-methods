@@ -17,6 +17,7 @@ namespace optimization.Pages
         public double? ResultX { get; set; }
         public double? ResultFx { get; set; }
         public string? PlotJson { get; set; }
+        public int? Iterations { get; set; }
 
         public string? Error { get; set; }
 
@@ -25,31 +26,39 @@ namespace optimization.Pages
             if (!ModelState.IsValid)
                 return Page();
 
-            Optumizer opt = new Optumizer();
+            Optimizer opt = new Optimizer();
             try
             {
                 string originalFunc = Func;
                 string funcForOpt = Mode == "Max" ? $"-({Func})" : Func;
 
-                (double fOpt, double xOpt) = opt.CalcGoldenRatio(funcForOpt, Left, Right, Epsilon);
+                (double fOpt, double xOpt, int iterations) = opt.CalcGoldenRatio(funcForOpt, Left, Right, Epsilon);
                 ResultX = xOpt;
                 ResultFx = Mode == "Max" ? -fOpt : fOpt;
+                Iterations = iterations;
 
-                PlotJson = BuildPlotJson(originalFunc, Left, Right, xOpt, ResultFx.Value);
+                PlotJson = BuildPlotJson(originalFunc, Left, Right, xOpt, ResultFx.Value, Mode);
                 Error = null;
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
                 Error = ex.Message;
                 ResultFx = null;
                 ResultX = null;
                 PlotJson = null;
             }
-            
+            catch (Exception)
+            {
+                Error = "Произошла внутренняя ошибка при выполнении оптимизации";
+                ResultFx = null;
+                ResultX = null;
+                PlotJson = null;
+            }
+
             return Page();
         }
 
-        private static string BuildPlotJson(string func, double a, double b, double xMin, double fMin)
+        private static string BuildPlotJson(string func, double a, double b, double xMin, double fMin, string mode)
         {
             var xArg = new Argument("x", a);
             var exp = new Expression(func, xArg);
@@ -71,7 +80,7 @@ namespace optimization.Pages
                 ys[i] = double.IsFinite(y) ? y : null;
             }
 
-            var payload = new { xs, ys, xMin, fMin };
+            var payload = new { xs, ys, xMin, fMin, optimumName = mode == "Max" ? "Максимум" : "Минимум" };
             return JsonSerializer.Serialize(payload);
         }
     }
