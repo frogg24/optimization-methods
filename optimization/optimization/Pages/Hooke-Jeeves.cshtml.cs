@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using optimization.Core;
 using org.mariuszgromada.math.mxparser;
+using ScottPlot.PlotStyles;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace optimization.Pages
@@ -34,19 +36,39 @@ namespace optimization.Pages
             string funcForOpt = Mode == "Max" ? $"-({Func})" : Func;
 
             Optimizer opt = new Optimizer();
-            (List<double> resX, double resFx) = opt.CalcHookeJeeves(funcForOpt, X0, Step, StepRed, Epsilon);
-            ResultFx = resFx;
-            ResultX = resX;
-            if (ResultX.Count == 1)
+            try
             {
-                PlotJson = BuildPlot2DJson(originalFunc, X0[0], ResultX[0], ResultFx.Value, Mode);
-            }
-            else if(ResultX.Count == 2)
-            {
-                PlotJson = BuildPlot3DJson(originalFunc, X0, ResultX, ResultFx.Value, Mode);
-            }
+                var stopwatch = Stopwatch.StartNew();
+                (List<double> resX, double resFx, int iterations, int functionEvaluations) = opt.CalcHookeJeeves(funcForOpt, X0, Step, StepRed, Epsilon);
+                stopwatch.Stop();
+                Console.WriteLine($"Время для функции размерностью {X0.Count} с погрешностью {Epsilon}: {stopwatch.Elapsed.TotalMilliseconds:F4} мс и {iterations} итераций c {functionEvaluations} вычислений функций");
 
-            Error = null;
+                ResultFx = resFx;
+                ResultX = resX;
+                if (ResultX.Count == 1)
+                {
+                    PlotJson = BuildPlot2DJson(originalFunc, X0[0], ResultX[0], ResultFx.Value, Mode);
+                }
+                else if (ResultX.Count == 2)
+                {
+                    PlotJson = BuildPlot3DJson(originalFunc, X0, ResultX, ResultFx.Value, Mode);
+                }
+                Error = null;
+            }
+            catch (ArgumentException ex)
+            {
+                Error = ex.Message;
+                ResultFx = null;
+                ResultX = null;
+                PlotJson = null;
+            }
+            catch (Exception ex)
+            {
+                Error = "Произошла внутренняя ошибка при выполнении оптимизации";
+                ResultFx = null;
+                ResultX = null;
+                PlotJson = null;
+            }
             return Page();
         }
 

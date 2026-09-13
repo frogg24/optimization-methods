@@ -88,8 +88,31 @@ namespace optimization.Core
             return (fMin, xMin, iterations);
         }
 
-        public (List<double> resX, double resFx) CalcHookeJeeves(string func, List<double> X0, double step, double stepRed, double eps)
+        public (List<double> resX, double resFx, int iterations, int functionEvaluations) CalcHookeJeeves(string func, List<double> X0, double step, double stepRed, double eps)
         {
+            if (string.IsNullOrWhiteSpace(func))
+            {
+                throw new ArgumentNullException("Функция не была введена");
+            }
+            foreach(var x in X0)
+            {
+                if (!double.IsFinite(x))
+                {
+                    throw new ArgumentException("Начальная точка должна быть составлена из конечных чисел");
+                }
+            }
+            if (eps<= 0)
+            {
+                throw new ArgumentException("Погрешность должна быть положительной");
+            }
+            if(step <= 0)
+            {
+                throw new ArgumentException("Шаг должен быть положительным");
+            }
+            if (stepRed <= 0)
+            {
+                throw new ArgumentException("Коэффициент шага должен быть положительным");
+            }
             var arguments = new List<Argument>();
 
             for (int i = 0; i < X0.Count; i++)
@@ -98,8 +121,11 @@ namespace optimization.Core
             }
             var exp = new Expression(func, arguments.ToArray());
 
+
+            int functionEvaluations = 0;
             double Calculate(List<double> point)
             {
+                functionEvaluations++;
                 for (int i = 0; i < point.Count; i++)
                 {
                     arguments[i].setArgumentValue(point[i]);
@@ -153,7 +179,7 @@ namespace optimization.Core
                 }
             }
 
-            return (baseX, baseValue);
+            return (baseX, baseValue, iterations, functionEvaluations);
         }
 
         private (List<double> point, double value) Explore( List<double> startPoint, double step, Func<List<double>, double> calculate)

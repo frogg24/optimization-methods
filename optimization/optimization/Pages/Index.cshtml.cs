@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using optimization.Core;
 using org.mariuszgromada.math.mxparser;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace optimization.Pages
@@ -32,7 +33,11 @@ namespace optimization.Pages
                 string originalFunc = Func;
                 string funcForOpt = Mode == "Max" ? $"-({Func})" : Func;
 
+                var stopwatch = Stopwatch.StartNew();
                 (double fOpt, double xOpt, int iterations) = opt.CalcGoldenRatio(funcForOpt, Left, Right, Epsilon);
+                stopwatch.Stop();
+                Console.WriteLine($"Время для интервала [{Left}, {Right}] с погрешностью {Epsilon}: {stopwatch.Elapsed.TotalMilliseconds:F4} мс и {iterations} итераций");
+
                 ResultX = xOpt;
                 ResultFx = Mode == "Max" ? -fOpt : fOpt;
                 Iterations = iterations;
@@ -71,7 +76,7 @@ namespace optimization.Pages
 
             const int n = 500;
             var xs = new double[n];
-            var ys = new double?[n];   // nullable: null = разрыв функции
+            var ys = new double?[n];
 
             for (int i = 0; i < n; i++)
             {

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Localization;
+using org.mariuszgromada.math.mxparser;
 using System.Globalization;
 
+License.iConfirmNonCommercialUse("optimization-methods");
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
